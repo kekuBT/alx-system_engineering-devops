@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
 # script that will display information about subdomains
-display_info ()
+# awk '{print $4}' is A record and $5 is the IP address
+custom_fn ()
 {
-    domain="$1"
-    subdomain="$2"
-    dig "$subdomain.$domain" | awk '/ANSWER SECTION:/{getline; printf "The subdomain %s is a %s record and points to %s\n", var, $4, $5}' var="$subdomain"
+    for arg
+    do
+	echo -n "The subdomain $arg is a "
+	dig $arg."$domain" | grep -A1 'ANSWER SECTION:' | tail -n 1 | awk '{print $4 " record and points to " $5}'
+    done
 }
 
-for subdomain in "www" "lb-01" "web-01" "web-02"
-do
-    if [ -z "$2" ] || [ "$2" == "$subdomain" ] ;
-    then
-	display_info "$1" "$subdomain"
-    fi
-done
+domain="$1"
+# sbdmain="$2"
+if [ $# -eq 1 ]; then
+    custom_fn www lb-01 web-01 web-02
+else
+    sbdmain="$2"
+    custom_fn "$sbdmain"
+fi
+
